@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사과의 꿈</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nanum+Square+Round:wght@700&display=swap" rel="stylesheet">
+    <style>
+        /* [추가] 요청하신 열린명조 폰트 정의 */
+        @font-face {
+            font-family: 'YeolrinMyeongjo-Bold';
+            src: url('https://cdn.jsdelivr.net/gh/fontbee/font@main/Yoondesign/YeolrinMyeongjo-Bold.woff') format('woff');
+            font-weight: 700;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'YeolrinMyeongjo-Regular';
+            src: url('https://cdn.jsdelivr.net/gh/fontbee/font@main/Yoondesign/YeolrinMyeongjo-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        body {
+            margin: 0;
+            /* [수정] 폰트 적용 */
+            font-family: 'YeolrinMyeongjo-Bold', serif;
+            background-color: #ff0000; 
+            color: #ffffff; /* 기본 텍스트 색상 흰색 */
+            overflow-x: hidden;
+        }
+
+        .full-screen-section {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            /* 불투명도(1.5초)와 배경색(2초)이 변할 때 부드럽게 */
+            transition: opacity 1.5s ease-in-out, background-color 2s ease-in-out; 
+            display: none; /* 기본 숨김 */
+        }
+
+        .full-screen-section.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .background-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 1;
+        }
+
+        /* 1. 인트로 스크린 (사과 이미지 + 스크롤 안내) */
+        #intro-screen {
+            background-color: #ffffff; /* 흰색 배경 */
+            cursor: pointer; /* 클릭 가능한 요소임을 표시 */
+        }
+        
+        #intro-screen .intro-title {
+            position: absolute;
+            left: 50%;
+            top: -25%;
+            transform: translateX(-50%);
+            font-size: 20vw;
+            color: #000000;
+            z-index: 0; /* 이미지 뒤에 배치 */
+            font-weight: 700;
+            font-family: 'YeolrinMyeongjo-Bold', serif;
+            white-space: nowrap;
+        }
+
+        #intro-screen .background-image {
+            background-image: url('a.png'); /* a.png는 사과 이미지 */
+            animation: sleeping 4s infinite ease-in-out;
+            transition: opacity 2.5s ease-out, transform 2.5s ease-out;
+            opacity: 1;
+            transform: scale(1);
+            will-change: opacity, transform; /* 성능 최적화 */
+        }
+
+        #intro-screen.awake .background-image {
+            animation: wakeUp 0.6s ease-out forwards;
+        }
+        
+        #intro-screen.fade-out .background-image {
+            opacity: 0 !important;
+            transform: scale(0.98) !important;
+            animation: none !important; /* 페이드 아웃 시 애니메이션 즉시 중지 */
+        }
+
+        @keyframes sleeping {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(0.98);
+            }
+        }
+
+        @keyframes wakeUp {
+            0% {
+                transform: scale(0.98);
+            }
+            50% {
+                transform: scale(1.08);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* 2. 타이틀 스크린 (텍스트 "사과의 꿈") */
+        #title-screen {
+            background-color: #ffffff; /* 시작은 흰색 배경 */
+        }
+        #title-screen.red-background {
+             background-color: #ff0000; /* .red-background 클래스가 추가되면 빨간 배경으로 변함 */
+        }
+        #title-screen h1 {
+            display: none; /* 제목 숨김 */
+        }
+        #title-screen .title-english {
+            display: none; /* 영어 제목 숨김 */
+        }
+        #title-screen .title-credit {
+            position: absolute;
+            left: 50%;
+            bottom: 8%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 700px;
+            font-size: 0.75rem;
+            line-height: 1.6;
+            margin: 0;
+            text-align: center;
+            font-weight: 700;
+            font-family: 'Nanum Square Round', sans-serif;
+            color: rgba(255, 255, 255, 0.5);
+            z-index: 10;
+            transition: color 2s ease-in-out;
+        }
+        #title-screen.red-background .title-credit {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        #title-screen .title-chapter {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffffff;
+            z-index: 10;
+            opacity: 0;
+            transition: opacity 2s ease-in-out, color 2s ease-in-out;
+            text-align: center;
+            font-family: 'YeolrinMyeongjo-Regular', serif;
+        }
+        
+        #title-screen .title-chapter .chapter-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        #title-screen .title-chapter .chapter-title {
+            font-size: 3rem;
+            font-weight: normal;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        
+        #title-screen .title-chapter .chapter-title-english {
+            font-size: 0.9rem;
+            font-weight: normal;
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: serif;
+            margin-top: 0.5rem;
+        }
+        
+        #title-screen.red-background .title-chapter {
+            opacity: 1;
+            color: #ffffff;
+        }
+
+
+        /* 스크롤 안내 문구 */
+        .scroll-prompt {
+            position: absolute;
+            bottom: 10%;
+            color: #000000; /* 검은색 텍스트 */
+            font-size: 1rem;
+            z-index: 10;
+            animation: fadeInOut 2s infinite alternate;
+            font-family: 'YeolrinMyeongjo-Regular', serif;
+            font-weight: normal;
+        }
+
+        @keyframes fadeInOut {
+            from { opacity: 0.3; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            from { transform: scale(1); opacity: 0.9; }
+            to { transform: scale(1.05); opacity: 1; }
+        }
+
+        /* 3. 본문 스토리 섹션 */
+        .story-section {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 0;
+            box-sizing: border-box;
+            background-color: #1a1a1a; /* 시작은 어두운 회색 */
+            opacity: 0;
+            display: none;
+            transition: opacity 2s ease-in-out, background-color 3s ease-in-out;
+            position: fixed; /* 크로스페이드를 위해 fixed로 변경 */
+            top: 0;
+            left: 0;
+            z-index: 20; /* 타이틀 화면 위에 표시 */
+            overflow: hidden;
+            cursor: pointer; /* 클릭 가능한 요소임을 표시 */
+        }
+        .story-section.red-fade {
+            background-color: #ff0000 !important; /* 빨간색으로 전환 */
+        }
+        
+        .story-section .chapter-2 {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            color: #ffffff;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            text-align: center;
+            font-family: 'YeolrinMyeongjo-Regular', serif;
+        }
+        
+        .story-section .chapter-2.visible {
+            opacity: 1;
+        }
+        
+        .story-section .chapter-2 .chapter-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .story-section .chapter-2 .chapter-title {
+            font-size: 3rem;
+            font-weight: normal;
+            display: block;
+        }
+        
+        .story-section.visible {
+            display: flex;
+            opacity: 1;
+        }
+
+        .story-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            filter: grayscale(100%) blur(3px);
+            object-fit: cover;
+            opacity: 1;
+            transition: opacity 3s ease-out;
+        }
+
+        .story-video.fade-out {
+            opacity: 0;
+        }
+
+        .story-content {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            text-align: center;
+            z-index: 10;
+            color: #ffffff;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .story-line {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 90%;
+            max-width: 700px;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            margin: 0;
+            opacity: 0;
+            transform: translate(-50%, calc(-50% + 20px));
+            transition: opacity 1.5s ease-in-out, transform 1.5s ease-in-out;
+            text-align: center;
+            font-weight: normal;
+            font-family: 'YeolrinMyeongjo-Regular', serif;
+        }
+
+        .story-line.visible {
+            opacity: 1;
+            transform: translate(-50%, -50%);
+        }
+
+        .story-line.hidden {
+            opacity: 0;
+            transform: translate(-50%, calc(-50% - 20px));
+        }
+
+        .story-line-translation {
+            position: absolute;
+            left: 50%;
+            bottom: 15%;
+            width: 90%;
+            max-width: 700px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0;
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+            transition: opacity 1.5s ease-in-out, transform 1.5s ease-in-out;
+            text-align: center;
+            font-weight: normal;
+            font-family: serif;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .story-line-translation.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .story-line-translation.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+        }
+    </style>
+</head>
+<body>
+    <audio id="scroll-audio" preload="auto">
+        <source src="a.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="end-audio" preload="auto">
+        <source src="b.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="story-start-audio" preload="auto">
+        <source src="t1.mp3" type="audio/mpeg">
+    </audio>
+
+    <section id="intro-screen" class="full-screen-section visible">
+        <div class="background-image"></div>
+        <h1 class="intro-title">사과와 나</h1>
+        <div class="scroll-prompt">
+            <p>클릭하여 이야기를 진행하세요.</p>
+        </div>
+    </section>
+
+    <section id="title-screen" class="full-screen-section">
+        <h1>사과의 꿈</h1>
+        <h2 class="title-english">The Dream of an Apple</h2>
+        <div class="title-chapter">
+            <span class="chapter-number">제 1장</span><br>
+            <span class="chapter-title">사과와 엄마</span>
+            <span class="chapter-title-english">Apple and Mother</span>
+        </div>
+    </section>
+
+    <section id="story-start" class="story-section">
+        <video class="story-video" muted playsinline>
+            <source src="a.mp4" type="video/mp4">
+        </video>
+        <div class="chapter-2">
+            <span class="chapter-number">제 2장</span><br>
+            <span class="chapter-title">엄마와 나</span>
+        </div>
+        <div class="story-content">
+            <!-- data-show-duration: 표시 시간(ms), data-hide-duration: 사라지는 시간(ms) -->
+            <!-- 예: <div class="story-line" data-show-duration="5000" data-hide-duration="2000">대사 내용</div> -->
+            <div class="story-line"data-show-duration="2000">우리 엄마가 제일 좋아하는 과일은 사과다.</div>
+            <div class="story-line-translation">My mother's favorite fruit is an apple.</div>
+            <div class="story-line"data-show-duration="4000">덕분에 철이 되면 집안에는 사과가 잔뜩 쌓이고,<br>식탁 위에는 늘 붉은 빛이 감돈다.</div>
+            <div class="story-line-translation">Thanks to that, when the season comes, apples pile up in the house,<br>and a red glow always lingers on the dining table.</div>
+            <div class="story-line"data-show-duration="2000">그에 반해 나는 사과를 싫어한다.</div>
+            <div class="story-line-translation">In contrast, I dislike apples.</div>
+            <div class="story-line" data-show-duration="8500" data-hide-duration="2000">사과 속처럼 단단하고 아삭거리는 질감이 싫다. 연한 잇몸과 부딪히는 그 거칠고 단단한 속살은 상상만 해도 기분을 상하게 만든다.</div>
+            <div class="story-line-translation">I hate the hard, crunchy texture like in the photo. Just imagining that rough, hard flesh hitting my tender gums makes me feel bad.</div>
+            <div class="story-line"data-show-duration="2500">하지만 우리 엄마는 사과를 보면 주로 웃는다.</div>
+            <div class="story-line-translation">But my mother usually smiles when she sees apples.</div>
+            <div class="story-line"data-show-duration="4500">아니더라도, 내 기억 속에서 사과를 깎고 있는 엄마는 언제나 행복해 보인다.</div>
+            <div class="story-line-translation">Even if not, in my memory, my mother peeling apples always looks happy.</div>
+            <div class="story-line"data-show-duration="8000">그래서 나는 사과가 싫어도, 엄마가 깎아주신 건 굳이 마다하지 않고 먹는다. 그러면 엄마의 행복이 옮아 나쁜 기분이 잠시 멈춘다.</div>
+            <div class="story-line-translation">So even though I dislike apples, I don't refuse the ones my mother peels for me. Then my mother's happiness transfers to me, and my bad mood stops for a moment.</div>
+        </div>
+    </section>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const introScreen = document.getElementById('intro-screen'); // 사과 이미지 화면
+            const titleScreen = document.getElementById('title-screen'); // "사과의 꿈" 타이틀 화면
+            const storyStart = document.getElementById('story-start');   // 스토리 시작 화면
+            const scrollPrompt = document.querySelector('#intro-screen .scroll-prompt');
+
+            let currentScene = 1; // 현재 장면 번호 (1: 인트로, 2: 타이틀, 3: 스토리)
+
+            // 한 줄씩 나타났다 사라지는 애니메이션 함수
+            function showLinesSequentially(lines, defaultShowDuration = 3000, defaultHideDuration = 1500, onComplete = null) {
+                let currentIndex = 0;
+                
+                function showNextLine() {
+                    if (currentIndex >= lines.length) {
+                        // 모든 줄이 끝났으면 콜백 호출
+                        if (onComplete) {
+                            onComplete();
+                        }
+                        return;
+                    }
+                    
+                    const line = lines[currentIndex];
+                    
+                    // 각 대사마다 개별 시간 설정 (data 속성에서 읽기, 없으면 기본값 사용)
+                    const showDuration = line.dataset.showDuration ? parseInt(line.dataset.showDuration) : defaultShowDuration;
+                    const hideDuration = line.dataset.hideDuration ? parseInt(line.dataset.hideDuration) : defaultHideDuration;
+                    
+                    // 현재 줄 표시
+                    line.classList.add('visible');
+                    
+                    // 영어 번역도 함께 표시 (다음 요소가 번역인 경우)
+                    const nextElement = line.nextElementSibling;
+                    if (nextElement && nextElement.classList.contains('story-line-translation')) {
+                        nextElement.classList.add('visible');
+                    }
+                    
+                    // 표시 시간 후 사라지기
+                    setTimeout(() => {
+                        line.classList.remove('visible');
+                        line.classList.add('hidden');
+                        
+                        // 영어 번역도 함께 사라지기
+                        if (nextElement && nextElement.classList.contains('story-line-translation')) {
+                            nextElement.classList.remove('visible');
+                            nextElement.classList.add('hidden');
+                        }
+                        
+                        // 사라지는 애니메이션 완료 후 다음 줄 표시
+                        setTimeout(() => {
+                            line.classList.remove('hidden');
+                            if (nextElement && nextElement.classList.contains('story-line-translation')) {
+                                nextElement.classList.remove('hidden');
+                            }
+                            currentIndex++; // 다음 story-line으로 이동 (번역은 자동으로 건너뜀)
+                            if (currentIndex < lines.length) {
+                                showNextLine();
+                            } else {
+                                // 모든 줄이 끝났으면 콜백 호출
+                                if (onComplete) {
+                                    onComplete();
+                                }
+                            }
+                        }, hideDuration);
+                    }, showDuration);
+                }
+                
+                showNextLine();
+            }
+
+            // 첫 번째 클릭 (인트로 -> 타이틀) - 사과 깨우기
+            introScreen.addEventListener('click', () => {
+                if (currentScene === 1) {
+                    console.log("Scene 1 -> 2 (Intro to Title) - 사과 깨우기");
+                    scrollPrompt.style.display = 'none';
+                    
+                    // 사과 깨우기 애니메이션
+                    introScreen.classList.add('awake');
+                    
+                    // 오디오 재생
+                    const scrollAudio = document.getElementById('scroll-audio');
+                    if (scrollAudio) {
+                        scrollAudio.currentTime = 0; // 처음부터 재생
+                        scrollAudio.play().catch(err => {
+                            console.log('오디오 재생 오류:', err);
+                        });
+                    }
+                    
+                    // 깨우기 애니메이션 후 페이드 아웃 (0.6초 후)
+                    setTimeout(() => {
+                        // 1단계: 사과 이미지 페이드 아웃
+                        introScreen.classList.add('fade-out');
+                    
+                        // 2단계: 사과 이미지가 사라진 후 (2.5초 후) 인트로 화면 숨기고 타이틀 화면 표시
+                        setTimeout(() => {
+                            introScreen.classList.remove('visible');
+                            titleScreen.classList.add('visible');
+                            currentScene = 2;
+                            
+                            // 3단계: 타이틀 화면이 나타난 후 (0.1초 후) 빨간 배경으로 전환
+                            setTimeout(() => {
+                                titleScreen.classList.add('red-background');
+                                
+                                // 4단계: 빨간 배경 전환 후 (2초 후) 자연스럽게 스토리 섹션으로 크로스페이드 전환
+                                setTimeout(() => {
+                                    currentScene = 3;
+                                    
+                                    // 타이틀 화면 transition을 2초로 맞춤 (스토리와 동일하게)
+                                    titleScreen.style.transition = 'opacity 2s ease-in-out';
+                                    
+                                    // 스토리 섹션을 먼저 표시 (display: flex, opacity: 0, 크로스페이드를 위해)
+                                    storyStart.style.display = 'flex';
+                                    storyStart.style.opacity = '0';
+                                    
+                                    // 다음 프레임에서 크로스페이드 시작 (타이틀 페이드 아웃, 스토리 페이드 인)
+                                    requestAnimationFrame(() => {
+                                        requestAnimationFrame(() => {
+                                            // 스토리 섹션 visible 클래스 추가
+                                            storyStart.classList.add('visible');
+                                            // 인라인 스타일 제거하여 CSS transition 작동 (opacity: 1로 페이드 인)
+                                            storyStart.style.opacity = '';
+                                            // 동시에 타이틀 화면 페이드 아웃
+                                            titleScreen.style.opacity = '0';
+                                            
+                                            // 페이드 전환 완료 후 타이틀 화면 숨기기 및 스타일 정리 (2초 후)
+                                            setTimeout(() => {
+                                                titleScreen.classList.remove('visible');
+                                                titleScreen.style.opacity = '';
+                                                titleScreen.style.transition = '';
+                                            }, 2000);
+                                        });
+                                    });
+
+                                    // 비디오 요소 가져오기
+                                    const storyVideo = storyStart.querySelector('.story-video');
+                                    if (storyVideo) {
+                                        // 비디오가 끝나면 서서히 사라지기
+                                        storyVideo.addEventListener('ended', () => {
+                                            storyVideo.classList.add('fade-out');
+                                        });
+                                    }
+
+                                    // 스토리가 나타나고 1초 뒤에 배경을 어두운 검정색으로 변경
+                                    setTimeout(() => {
+                                        storyStart.style.backgroundColor = '#1a1a1a';
+                                        
+                                        // 대사 시작 전 클릭 이벤트 활성화
+                                        function startClickHandler() {
+                                            // 클릭 이벤트는 한 번만 실행
+                                            storyStart.removeEventListener('click', startClickHandler);
+                                            
+                                            // 비디오 재생 (대사와 함께)
+                                            if (storyVideo) {
+                                                storyVideo.currentTime = 0; // 처음부터 재생
+                                                storyVideo.play().catch(err => {
+                                                    console.log('비디오 재생 오류:', err);
+                                                });
+                                            }
+                                            
+                                            // t1.mp3 재생
+                                            const storyStartAudio = document.getElementById('story-start-audio');
+                                            if (storyStartAudio) {
+                                                storyStartAudio.loop = false; // 반복 재생 방지
+                                                storyStartAudio.volume = 0.2; // 볼륨 50%로 설정 (0.0~1.0)
+                                                storyStartAudio.currentTime = 0;
+                                                storyStartAudio.play().catch(err => {
+                                                    console.log('오디오 재생 오류:', err);
+                                                });
+                                                // 재생이 끝나면 정지
+                                                storyStartAudio.addEventListener('ended', () => {
+                                                    storyStartAudio.pause();
+                                                    storyStartAudio.currentTime = 0;
+                                                }, { once: true });
+                                            }
+                                            
+                                            // 한 줄씩 나타났다 사라지는 애니메이션 시작
+                                            const storyLines = storyStart.querySelectorAll('.story-line');
+                                            function endClickHandler() {
+                                                // 클릭 이벤트는 한 번만 실행
+                                                storyStart.removeEventListener('click', endClickHandler);
+                                                
+                                                // 배경이 빨개지는 애니메이션 (인라인 스타일로 직접 변경)
+                                                storyStart.style.backgroundColor = '#ff0000';
+                                                
+                                                // b.mp3 재생
+                                                const endAudio = document.getElementById('end-audio');
+                                                if (endAudio) {
+                                                    endAudio.currentTime = 0;
+                                                    endAudio.play().catch(err => {
+                                                        console.log('오디오 재생 오류:', err);
+                                                    });
+                                                }
+                                                
+                                                // 배경 전환과 오디오 재생 후 2.html로 이동
+                                                setTimeout(() => {
+                                                    window.location.href = '2.html';
+                                                }, 2000); // 2초 후 이동
+                                            }
+                                            
+                                            showLinesSequentially(Array.from(storyLines), 3000, 1500, () => {
+                                                // 모든 대사가 끝난 후 클릭 이벤트 활성화
+                                                storyStart.addEventListener('click', endClickHandler);
+                                            });
+                                        }
+                                        storyStart.addEventListener('click', startClickHandler);
+                                    }, 1000);
+                                }, 2000); // 2초 딜레이
+                            }, 100);
+                        }, 2500); // 2.5초 딜레이 (사과 이미지 페이드 아웃 시간)
+                    }, 600); // 깨우기 애니메이션 시간 (0.6초)
+                }
+            }); // 클릭 이벤트
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>사과의 꿈 - 다음 장면 (비율 유지 확대)</title>
+    
+    <style>
+        /* 폰트 정의 (기존 유지) */
+        @font-face {
+            font-family: 'YeolrinMyeongjo-Bold';
+            src: url('https://cdn.jsdelivr.net/gh/fontbee/font@main/Yoondesign/YeolrinMyeongjo-Bold.woff') format('woff');
+            font-weight: 700;
+            font-style: normal;
+        }
+        @font-face {
+            font-family: 'YeolrinMyeongjo-Regular';
+            src: url('https://cdn.jsdelivr.net/gh/fontbee/font@main/Yoondesign/YeolrinMyeongjo-Regular.woff') format('woff');
+            font-weight: 400;
+            font-style: normal;
+        }
+        
+        /* 기본 스타일 */
+        body {
+            margin: 0;
+            font-family: 'YeolrinMyeongjo-Bold', serif;
+            background-color: #ffffff; /* 흰 배경 */
+            color: #ffffff;
+            overflow: hidden;
+        }
+        
+        /* 0. 제 2장 화면 (처음에 표시) */
+        .chapter-2-screen {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ff0000;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 40;
+            opacity: 1;
+            transition: opacity 1.5s ease-out;
+        }
+        
+        .chapter-2-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .chapter-2-content {
+            text-align: center;
+            font-family: 'YeolrinMyeongjo-Regular', serif;
+            color: #ffffff;
+        }
+        
+        .chapter-2-content .chapter-number {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .chapter-2-content .chapter-title {
+            font-size: 3rem;
+            font-weight: normal;
+            display: block;
+            margin-bottom: 1rem;
+        }
+        
+        .chapter-2-content .chapter-title-english {
+            font-size: 0.9rem;
+            font-weight: normal;
+            display: block;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: serif;
+            margin-top: 0.5rem;
+        }
+        
+        /* 1. 초기 이미지 화면 */
+        .image-screen {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #ffffff;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 30; /* 스토리 섹션 위에 위치 */
+            cursor: pointer;
+            transition: opacity 0.5s ease-out; /* 사라질 때 사용 */
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .image-screen.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .initial-image {
+            width: 600px; /* 초기 크기 */
+            height: auto;
+            max-width: 60vw;
+            max-height: 60vh;
+            object-fit: contain; /* 핵심: 초기에도, 확대 시에도 비율 유지 (여백 발생 가능) */
+            
+            /* 핵심 수정: 확대 전환 시간 설정 (2초) */
+            transition: all 2s ease-in-out;
+            transform-origin: center center;
+            will-change: width, height, max-width, max-height;
+        }
+        
+        /* 핵심 수정: 확대된 상태 - 화면 전체 크기만큼 커지도록 설정 */
+        /* object-fit: contain 덕분에 비율은 유지되지만, 화면 비율과 다르면 여백 발생 */
+        .initial-image.expanded {
+            width: 100vw !important;
+            height: 100vh !important;
+            max-width: 100vw !important;
+            max-height: 100vh !important;
+            /* object-fit: contain; 이 이미지를 기본으로 유지 */
+        }
+        
+        /* 2. 스토리 섹션 */
+        .story-section {
+            width: 100vw;
+            height: 100vh;
+            display: none; /* 초기에는 숨김 */
+            justify-content: center;
+            align-items: center;
+            background-color: #1a1a1a; /* 기본 어두운 배경 */
+            color: #ffffff;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 20; /* 이미지 아래에 위치 */
+            overflow: hidden;
+            opacity: 0; /* 핵심: 처음에는 완전히 투명 */
+            transition: opacity 0.5s ease-in-out; /* 배경 및 동영상 나타나는 시간 */
+        }
+        
+        .story-section.visible {
+            display: flex; /* 보이게 설정 */
+            opacity: 1; /* 완전히 나타남 */
+        }
+        
+        /* 핵심 수정: 동영상 - 처음엔 투명하게, 전환 시에 보이게 */
+        .story-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100vw;
+            height: 100vh;
+            max-width: 100vw;
+            max-height: 100vh;
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            filter: grayscale(100%) blur(3px); /* 초기에는 흑백 */
+            object-fit: contain; /* 핵심: 동영상도 비율 유지 (사진과 동일) */
+            opacity: 0; /* 초기에는 투명 */
+            transition: opacity 0.5s ease-out, filter 1s ease-in-out 0.5s; /* 색상 전환은 약간 지연 */
+        }
+
+        .story-video.fade-in {
+            opacity: 1; /* 서서히 나타남 */
+            filter: brightness(0.7) blur(3px); /* 색상으로 전환, 살짝 어둡게 (grayscale 제거, brightness로 어둡게) */
+            transition: opacity 0.5s ease-out, filter 1s ease-in-out; /* 필터 전환 시간 추가 */
+        }
+        
+        .story-video.grayscale {
+            filter: grayscale(100%) brightness(0.7) blur(3px); /* 흑백으로 전환 */
+            transition: filter 3s ease-in-out; /* 서서히 색상으로 전환 */
+        }
+        
+        .story-video.grayscale.fade-to-color {
+            filter: brightness(0.7) blur(3px); /* 서서히 색상으로 돌아감 */
+        }
+        
+        .story-video.fade-out {
+            opacity: 0; /* 서서히 사라짐 */
+            transition: opacity 2s ease-out; /* 2초 동안 서서히 사라짐 */
+        }
+        
+        .story-content {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 대사 스타일 (기존 유지) */
+        .story-line {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 90%;
+            max-width: 700px;
+            font-size: 1.3rem;
+            line-height: 1.8;
+            margin: 0;
+            opacity: 0;
+            transform: translate(-50%, calc(-50% + 20px));
+            transition: opacity 1.5s ease-in-out, transform 1.5s ease-in-out;
+            text-align: center;
+            font-weight: normal;
+            font-family: 'YeolrinMyeongjo-Regular', serif;
+        }
+        .story-line.visible {
+            opacity: 1;
+            transform: translate(-50%, -50%); 
+        }
+
+        .story-line.hidden {
+            opacity: 0;
+            transform: translate(-50%, calc(-50% - 20px)); 
+        }
+
+        .story-line-translation {
+            position: absolute;
+            left: 50%;
+            bottom: 15%;
+            width: 90%;
+            max-width: 700px;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin: 0;
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+            transition: opacity 1.5s ease-in-out, transform 1.5s ease-in-out;
+            text-align: center;
+            font-weight: normal;
+            font-family: serif;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .story-line-translation.visible {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .story-line-translation.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+        }
+    </style>
+</head>
+<body>
+    <audio id="t2-audio" preload="auto">
+        <source src="t2.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="c-audio" preload="auto">
+        <source src="c.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- 제 2장 화면 (처음에 표시) -->
+    <section id="chapter-2-screen" class="chapter-2-screen">
+        <div class="chapter-2-content">
+            <span class="chapter-number">제 2장</span>
+            <span class="chapter-title">엄마와 나</span>
+            <span class="chapter-title-english">Mother and I</span>
+        </div>
+    </section>
+
+    <section id="image-screen" class="image-screen">
+        <img src="b.png" alt="b image" class="initial-image" id="initial-image">
+    </section>
+
+    <section id="next-story-scene" class="story-section">
+        <video class="story-video" muted playsinline id="story-video">
+            <source src="b.mp4" type="video/mp4">
+        </video>
+        <div class="story-content">
+            <div class="story-line" data-show-duration="1800">엄마와 나의 관계는 늘 이런 식이다.</div>
+            <div class="story-line-translation">My relationship with my mother has always been like this.</div>
+            
+            <div class="story-line" data-show-duration="4000">나는 대외적으로 봤을 때 '착한 딸'이다.<br> 엄마의 주변 사람들도 나를 예뻐라한다.</div>
+            <div class="story-line-translation">I am, by all appearances, a 'good daughter'. My mother's acquaintances also like me.</div>
+            
+            <div class="story-line" data-show-duration="1500">엄마는 나를 사랑한다.</div>
+            <div class="story-line-translation">My mother loves me.</div>
+            
+            <div class="story-line" data-show-duration="2000">하지만 그 사랑이 가끔은 숨 막히게 느껴진다.</div>
+            <div class="story-line-translation">But that love sometimes feels suffocating.</div>
+            
+            <div class="story-line" data-show-duration="1500">나는 줄곧 엄마의 입맛대로 살아왔다.</div>
+            <div class="story-line-translation">I have always lived according to my mother's preferences.</div>
+            
+            <div class="story-line" data-show-duration="3300">이게 아주 큰 부담이 되는 건 아니지만, 가끔은 벅차다.</div>
+            <div class="story-line-translation">It's not a huge burden, but it's just the way it is.</div>
+            
+            <div class="story-line" data-show-duration="2800">모나지도, 반항하지도 않고 그저 하라는 대로 살아왔다.</div>
+            <div class="story-line-translation">I've lived without being sharp or rebellious, just doing as I was told.</div>
+            
+            <div class="story-line" data-show-duration="3200">그래서 엄마가 행복하면 나도 행복하다고, 정말로 그렇게 믿었다.</div>
+            <div class="story-line-translation">So I truly believed that if my mother was happy, I was happy too.</div>
+        </div>
+    </section>
+
+    <script>
+        function showLinesSequentially(lines, defaultShowDuration = 3000, defaultHideDuration = 1500, onComplete = null, videoElement = null) {
+            let currentIndex = 0;
+            
+            function showNextLine() {
+                if (currentIndex >= lines.length) {
+                    if (onComplete) {
+                        onComplete();
+                    }
+                    return;
+                }
+                
+                const line = lines[currentIndex];
+                const showDuration = line.dataset.showDuration ? parseInt(line.dataset.showDuration) : defaultShowDuration;
+                const hideDuration = line.dataset.hideDuration ? parseInt(line.dataset.hideDuration) : defaultHideDuration;
+                
+                // "하지만 그 사랑이 가끔은 숨 막히게 느껴진다" 대사인지 확인
+                const lineText = line.textContent.trim();
+                if (lineText.includes('하지만 그 사랑이 가끔은 숨 막히게 느껴진다')) {
+                    // 동영상을 흑백으로 전환 (이후 계속 유지)
+                    if (videoElement) {
+                        videoElement.classList.add('grayscale');
+                    }
+                }
+                // 해당 대사 이후에는 계속 흑백 유지, 색상으로 돌아가지 않음
+                
+                line.classList.add('visible');
+                
+                const nextElement = line.nextElementSibling;
+                if (nextElement && nextElement.classList.contains('story-line-translation')) {
+                    nextElement.classList.add('visible');
+                }
+                
+                setTimeout(() => {
+                    line.classList.remove('visible');
+                    line.classList.add('hidden');
+                    
+                    if (nextElement && nextElement.classList.contains('story-line-translation')) {
+                        nextElement.classList.remove('visible');
+                        nextElement.classList.add('hidden');
+                    }
+                    
+                    setTimeout(() => {
+                        line.classList.remove('hidden');
+                        if (nextElement && nextElement.classList.contains('story-line-translation')) {
+                            nextElement.classList.remove('hidden');
+                        }
+                        currentIndex++;
+                        if (currentIndex < lines.length) {
+                            showNextLine();
+                        } else {
+                            if (onComplete) {
+                                onComplete();
+                            }
+                        }
+                    }, hideDuration);
+                }, showDuration);
+            }
+            
+            showNextLine();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const chapter2Screen = document.getElementById('chapter-2-screen');
+            const imageScreen = document.getElementById('image-screen');
+            const initialImage = document.getElementById('initial-image');
+            const storySection = document.getElementById('next-story-scene');
+            const storyVideo = document.getElementById('story-video');
+            const storyLines = document.querySelectorAll('#next-story-scene .story-line');
+            
+            let currentStep = 1;
+            
+            // 처음에 제 2장 화면 표시, 2초 후 사라지고 사진 표시
+            setTimeout(() => {
+                chapter2Screen.classList.add('fade-out');
+                setTimeout(() => {
+                    chapter2Screen.style.display = 'none';
+                    imageScreen.classList.add('visible');
+                }, 1500); // fade-out transition 시간
+            }, 2000); // 2초 표시 후 사라짐
+            
+            // 첫 번째 클릭: 이미지 확대
+            function firstClickHandler() {
+                if (currentStep === 1) {
+                    currentStep = 2;
+                    
+                    // c.mp3 재생
+                    const cAudio = document.getElementById('c-audio');
+                    if (cAudio) {
+                        cAudio.currentTime = 0;
+                        cAudio.play().catch(err => {
+                            console.log('오디오 재생 오류:', err);
+                        });
+                    }
+                    
+                    // 이미지 확대 클래스 추가
+                    initialImage.classList.add('expanded');
+                    
+                    // 스토리 섹션을 보이게 설정 (이미지 뒤에 준비)
+                    storySection.style.display = 'flex';
+                    storySection.classList.add('visible'); // opacity: 1로 전환 시작
+                    
+                    // 확대 애니메이션 완료 후 다음 클릭 이벤트 활성화
+                    setTimeout(() => {
+                        imageScreen.addEventListener('click', secondClickHandler);
+                    }, 2000); // initial-image의 transition 시간과 맞춤
+                }
+            }
+            
+            // 두 번째 클릭: 이미지 화면 숨기기 및 동영상 재생, 대사 시작
+            function secondClickHandler() {
+                if (currentStep === 2) {
+                    currentStep = 3;
+                    imageScreen.removeEventListener('click', secondClickHandler);
+                    
+                    // 이미지 화면을 완전히 숨김
+                    imageScreen.style.opacity = '0';
+                    
+                    // 동영상을 보이게 설정
+                    storyVideo.classList.add('fade-in');
+                    
+                    // 이미지 화면이 완전히 사라진 후 (0.5초 후) 동영상 재생 및 대사 시작
+                    setTimeout(() => {
+                        imageScreen.style.display = 'none'; // DOM에서 제거하여 클릭 막음
+                        
+                        // 동영상 재생
+                        if (storyVideo) {
+                            storyVideo.currentTime = 0;
+                            storyVideo.play().catch(err => {
+                                console.log('비디오 재생 오류:', err);
+                            });
+                        }
+                        
+                        // t2.mp3 재생
+                        const t2Audio = document.getElementById('t2-audio');
+                        if (t2Audio) {
+                            t2Audio.loop = false;
+                            t2Audio.volume = 0.2;
+                            t2Audio.currentTime = 0;
+                            t2Audio.play().catch(err => {
+                                console.log('오디오 재생 오류:', err);
+                            });
+                            t2Audio.addEventListener('ended', () => {
+                                t2Audio.pause();
+                                t2Audio.currentTime = 0;
+                            }, { once: true });
+                        }
+                        
+                        // 대사 시작 (동영상 요소 전달)
+                        showLinesSequentially(Array.from(storyLines), 3000, 1500, () => {
+                            console.log("모든 대사가 끝났습니다.");
+                            // 모든 대사가 끝난 후 동영상이 서서히 사라지고 검은 화면으로
+                            // 흑백 상태는 계속 유지
+                            setTimeout(() => {
+                                storyVideo.classList.add('fade-out');
+                                
+                                // 동영상이 완전히 사라진 후 배경을 검은색으로
+                                setTimeout(() => {
+                                    storySection.style.backgroundColor = '#000000';
+                                    storySection.style.cursor = 'pointer'; // 클릭 가능 표시
+                                    
+                                    // 암전된 화면 클릭 시 3.html로 이동
+                                    function fadeOutClickHandler() {
+                                        storySection.removeEventListener('click', fadeOutClickHandler);
+                                        window.location.href = '3.html';
+                                    }
+                                    storySection.addEventListener('click', fadeOutClickHandler);
+                                }, 2000); // fade-out transition 시간과 맞춤
+                            }, 500);
+                        }, storyVideo);
+                    }, 500); 
+                }
+            }
+            
+            // 첫 번째 클릭 이벤트 등록
+            imageScreen.addEventListener('click', firstClickHandler);
+        });
+    </script>
+</body>
+</html>
